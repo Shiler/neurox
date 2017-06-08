@@ -15,5 +15,5 @@ dependencies {
 
     compile 'com.github.jacek-marchwicki:JavaWebsocketClient:master-SNAPSHOT'
     compile 'com.google.code.gson:gson:2.8.1'
-    compile 'org.json:json:20170516'
+    compile 'org.apache.logging.log4j:log4j-core:2.8.2'
 }
