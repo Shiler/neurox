@@ -5,26 +5,16 @@ package by.shiler.neurox.entity;
  */
 public class Bet {
 
-    private int userId;
     private String username;
     private double amount;
     private String color;
     private int mode;
 
-    public Bet(int userId, String username, double amount, String color, int mode) {
-        this.userId = userId;
+    public Bet(String username, double amount, String color, int mode) {
         this.username = username;
         this.amount = amount;
         this.color = color;
         this.mode = mode;
-    }
-
-    public int getUserId() {
-        return userId;
-    }
-
-    public void setUserId(int userId) {
-        this.userId = userId;
     }
 
     public String getUsername() {
@@ -57,5 +47,15 @@ public class Bet {
 
     public void setMode(int mode) {
         this.mode = mode;
+    }
+
+    @Override
+    public String toString() {
+        return "Bet{" +
+                "username='" + username + '\'' +
+                ", amount=" + amount +
+                ", color='" + color + '\'' +
+                ", mode=" + mode +
+                '}';
     }
 }

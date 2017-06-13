@@ -1,5 +1,6 @@
 package by.shiler.neurox.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -8,13 +9,13 @@ import java.util.List;
 public class Game {
 
     private int id;
-    private int start;
     private List<Bet> bets;
     private int rollResult;
 
-    public Game(int id, int start) {
+    public Game(int id, int rollResult) {
         this.id = id;
-        this.start = start;
+        this.rollResult = rollResult;
+        bets = new ArrayList<>();
     }
 
     public void addBet(Bet bet) {
@@ -27,14 +28,6 @@ public class Game {
 
     public void setId(int id) {
         this.id = id;
-    }
-
-    public int getStart() {
-        return start;
-    }
-
-    public void setStart(int start) {
-        this.start = start;
     }
 
     public List<Bet> getBets() {
@@ -51,5 +44,14 @@ public class Game {
 
     public void setRollResult(int rollResult) {
         this.rollResult = rollResult;
+    }
+
+    @Override
+    public String toString() {
+        return "Game{" +
+                "id=" + id +
+                ", bets=" + bets +
+                ", rollResult=" + rollResult +
+                '}';
     }
 }
