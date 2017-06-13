@@ -1,8 +1,8 @@
 package by.shiler.neurox.util;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Properties;
 
 /**
@@ -12,7 +12,7 @@ public class PropertiesLoader {
 
     public static Properties load(String fileName) throws IOException {
         Properties properties = new Properties();
-        properties.load(new FileReader("classpath:" + fileName));
+        properties.load(PropertiesLoader.class.getClassLoader().getResourceAsStream(fileName));
         return properties;
     }
 

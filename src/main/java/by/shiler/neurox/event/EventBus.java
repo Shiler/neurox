@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import rx.Observable;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by Evgeny Yushkevich on 08.06.2017.
@@ -21,12 +22,19 @@ public class EventBus {
 
     private static Request request = null;
     private static Observable<RouletteEvent> events;
+    private static OkHttpClient okHttpClient;
 
     static {
         try {
             String url = PropertiesLoader.load("application.properties").getProperty("ws.url");
             request = new Request.Builder().get()
                     .url(url)
+                    .build();
+            okHttpClient = new OkHttpClient.Builder()
+                    .connectTimeout(0, TimeUnit.MILLISECONDS)
+                    .pingInterval(10, TimeUnit.SECONDS)
+                    .readTimeout(0, TimeUnit.MILLISECONDS)
+                    .writeTimeout(0, TimeUnit.MILLISECONDS)
                     .build();
         } catch (IOException e) {
             LOG.error(e);
@@ -35,7 +43,7 @@ public class EventBus {
     }
 
     public static void start() {
-        events = new RxWebSockets(new OkHttpClient(), request)
+        events = new RxWebSockets(okHttpClient, request)
                 .webSocketObservable()
                 .filter(event -> event.getClass().equals(RxEventStringMessage.class))
                 .cast(RxEventStringMessage.class)
@@ -43,7 +51,7 @@ public class EventBus {
                 .map(o -> RouletteEventParser.parse(o.message()));
     }
 
-    public Observable<RouletteEvent> events() {
+    public static Observable<RouletteEvent> events() {
         return events;
     }
 
