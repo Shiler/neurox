@@ -39,7 +39,7 @@ public class EventBus {
                 public void onOpen(WebSocket webSocket, Response response) {
                     webSocket.send("2probe");
                     webSocket.send("5");
-                    startPingPonger(webSocket);
+                    PingPonger.start(webSocket);
                     LOG.info("WebSocket opened");
                 }
 
@@ -50,11 +50,13 @@ public class EventBus {
 
                 @Override
                 public void onClosing(WebSocket webSocket, int code, String reason) {
+                    PingPonger.stop();
                     LOG.info("WebSocket is closing");
                 }
 
                 @Override
                 public void onFailure(WebSocket webSocket, Throwable t, Response response) {
+                    PingPonger.stop();
                     LOG.error(t);
                     subscriber.onError(t);
                 }
@@ -63,25 +65,36 @@ public class EventBus {
         }).cast(String.class)
                 .filter(s -> s.contains("\"roulette:"))
                 .map(RouletteEventParser::parse);
-
     }
 
     public static Observable<RouletteEvent> events() {
         return events;
     }
 
-    private static void startPingPonger(WebSocket webSocket) {
-        Thread thread = new Thread(() -> {
-            while (true) {
-                webSocket.send("2");
-                try {
-                    Thread.sleep(50000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+    private static class PingPonger {
+
+        private static boolean isRunning = false;
+
+        private static void start(WebSocket webSocket) {
+            isRunning = true;
+            Thread thread = new Thread(() -> {
+                while (isRunning) {
+                    webSocket.send("2");
+                    try {
+                        Thread.sleep(50000);
+                    } catch (InterruptedException e) {
+                        LOG.fatal(e);
+                        throw new RuntimeException(e);
+                    }
                 }
-            }
-        });
-        thread.start();
+            });
+            thread.start();
+        }
+
+        private static void stop() {
+            isRunning = false;
+        }
+
     }
 
 }
