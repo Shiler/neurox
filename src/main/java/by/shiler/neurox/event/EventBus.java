@@ -3,7 +3,6 @@ package by.shiler.neurox.event;
 import by.shiler.neurox.parser.RouletteEventParser;
 import by.shiler.neurox.util.PropertiesLoader;
 import okhttp3.*;
-import okio.ByteString;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import rx.Observable;
@@ -56,8 +55,8 @@ public class EventBus {
 
                 @Override
                 public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-                    t.printStackTrace();
                     LOG.error(t);
+                    subscriber.onError(t);
                 }
 
             });

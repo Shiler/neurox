@@ -1,21 +1,33 @@
-package by.shiler.neurox.entity;
+package by.shiler.neurox.repository;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by Evgeny Yushkevich on 09.06.2017.
  */
+@Entity
+@Table(name = "games")
 public class Game {
 
+    @Id
+    @Column
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
+
+    @OneToMany(mappedBy = "game", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<Bet> bets;
+
+    @Column(name = "roll_result")
     private int rollResult;
 
-    public Game(int id, int rollResult) {
-        this.id = id;
+    public Game(int rollResult) {
         this.rollResult = rollResult;
         bets = new ArrayList<>();
+    }
+
+    public Game() {
     }
 
     public void addBet(Bet bet) {
