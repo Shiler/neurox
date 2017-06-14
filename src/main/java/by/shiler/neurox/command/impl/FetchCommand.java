@@ -10,7 +10,6 @@ import by.shiler.neurox.event.result.RouletteResultEvent;
 import by.shiler.neurox.repository.Bet;
 import by.shiler.neurox.repository.Game;
 import rx.Observable;
-import rx.Subscription;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -40,10 +39,12 @@ public class FetchCommand implements ICommand {
                 .map(FetchCommand::composeGame)
                 .limit(gamesToFetch)
                 .doOnCompleted(() -> {
-                    System.out.println("completed");
+                    databaseHelper.closeSession();
                     EventBus.stop();
+                    System.out.println("fetched " + gamesToFetch + " games");
+                    System.exit(0); // omg, dude
                 });
-        Subscription subscription = gameObservable.subscribe(databaseHelper::saveGame);
+        gameObservable.subscribe(databaseHelper::saveGame);
 
     }
 

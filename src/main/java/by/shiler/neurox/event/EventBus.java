@@ -40,13 +40,14 @@ public class EventBus {
     public static void start() {
         isRunning = true;
         events = Observable.create(subscriber -> {
+            PingPonger pingPonger = new PingPonger();
             okHttpClient.newWebSocket(request, new WebSocketListener() {
                 @Override
                 public void onOpen(WebSocket webSocket, Response response) {
                     subscriber.onStart();
                     webSocket.send("2probe");
                     webSocket.send("5");
-                    PingPonger.start(webSocket);
+                    pingPonger.start(webSocket);
                     LOG.info("WebSocket opened");
                 }
 
@@ -60,7 +61,7 @@ public class EventBus {
 
                 @Override
                 public void onClosing(WebSocket webSocket, int code, String reason) {
-                    PingPonger.stop();
+                    pingPonger.stop();
                     subscriber.onCompleted();
                     subscriber.unsubscribe();
                     webSocket.cancel();
@@ -69,7 +70,7 @@ public class EventBus {
 
                 @Override
                 public void onFailure(WebSocket webSocket, Throwable t, Response response) {
-                    PingPonger.stop();
+                    pingPonger.stop();
                     LOG.error(t);
                     subscriber.onError(t);
                 }
@@ -90,26 +91,27 @@ public class EventBus {
 
     private static class PingPonger {
 
-        private static boolean isRunning = false;
+        private boolean isRunning = false;
+        private Thread thread;
 
-        private static void start(WebSocket webSocket) {
+        private void start(WebSocket webSocket) {
             isRunning = true;
-            Thread thread = new Thread(() -> {
+            thread = new Thread(() -> {
                 while (isRunning) {
                     webSocket.send("2");
                     try {
                         Thread.sleep(50000);
                     } catch (InterruptedException e) {
-                        LOG.fatal(e);
-                        throw new RuntimeException(e);
+                        LOG.info("Ping ponger stopped.");
                     }
                 }
             });
             thread.start();
         }
 
-        private static void stop() {
+        private void stop() {
             isRunning = false;
+            thread.interrupt();
         }
 
     }
