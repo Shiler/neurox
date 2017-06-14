@@ -10,6 +10,7 @@ import by.shiler.neurox.event.result.RouletteResultEvent;
 import by.shiler.neurox.repository.Bet;
 import by.shiler.neurox.repository.Game;
 import rx.Observable;
+import rx.Subscription;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -32,10 +33,18 @@ public class FetchCommand implements ICommand {
         EventBus.start();
         Observable<RouletteEvent> stopEvents = EventBus.events()
                 .filter(FetchCommand::isResultEvent)
-                .delaySubscription(10, TimeUnit.NANOSECONDS);
+                .delaySubscription(50, TimeUnit.NANOSECONDS);
         Observable<Game> gameObservable = EventBus.events()
-                .buffer(stopEvents).skip(1).map(FetchCommand::composeGame).limit(gamesToFetch);
-        gameObservable.subscribe(databaseHelper::saveGame);
+                .buffer(stopEvents)
+                .skip(1)
+                .map(FetchCommand::composeGame)
+                .limit(gamesToFetch)
+                .doOnCompleted(() -> {
+                    System.out.println("completed");
+                    EventBus.stop();
+                });
+        Subscription subscription = gameObservable.subscribe(databaseHelper::saveGame);
+
     }
 
     private static Game composeGame(List<RouletteEvent> list) {

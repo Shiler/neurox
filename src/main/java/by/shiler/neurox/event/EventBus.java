@@ -20,23 +20,30 @@ public class EventBus {
     private static Request request;
     private static OkHttpClient okHttpClient;
     private static Observable<RouletteEvent> events;
+    private static boolean isRunning = false;
 
     static {
         try {
             String url = PropertiesLoader.load("application.properties").getProperty("ws.url");
             request = new Request.Builder().url(url).build();
-            okHttpClient = new OkHttpClient.Builder().readTimeout(0, TimeUnit.MILLISECONDS).writeTimeout(0, TimeUnit.MILLISECONDS)
-                    .connectTimeout(0, TimeUnit.MILLISECONDS).pingInterval(25000, TimeUnit.MILLISECONDS).build();
+            okHttpClient = new OkHttpClient.Builder()
+                    .readTimeout(0, TimeUnit.MILLISECONDS)
+                    .writeTimeout(0, TimeUnit.MILLISECONDS)
+                    .connectTimeout(0, TimeUnit.MILLISECONDS)
+                    .pingInterval(25000, TimeUnit.MILLISECONDS)
+                    .build();
         } catch (IOException e) {
             LOG.fatal(e);
         }
     }
 
     public static void start() {
+        isRunning = true;
         events = Observable.create(subscriber -> {
             okHttpClient.newWebSocket(request, new WebSocketListener() {
                 @Override
                 public void onOpen(WebSocket webSocket, Response response) {
+                    subscriber.onStart();
                     webSocket.send("2probe");
                     webSocket.send("5");
                     PingPonger.start(webSocket);
@@ -45,12 +52,18 @@ public class EventBus {
 
                 @Override
                 public void onMessage(WebSocket webSocket, String text) {
+                    if (!isRunning) {
+                        webSocket.close(1000, "Requested by user");
+                    }
                     subscriber.onNext(text);
                 }
 
                 @Override
                 public void onClosing(WebSocket webSocket, int code, String reason) {
                     PingPonger.stop();
+                    subscriber.onCompleted();
+                    subscriber.unsubscribe();
+                    webSocket.cancel();
                     LOG.info("WebSocket is closing");
                 }
 
@@ -65,6 +78,10 @@ public class EventBus {
         }).cast(String.class)
                 .filter(s -> s.contains("\"roulette:"))
                 .map(RouletteEventParser::parse);
+    }
+
+    public static void stop() {
+        isRunning = false;
     }
 
     public static Observable<RouletteEvent> events() {
